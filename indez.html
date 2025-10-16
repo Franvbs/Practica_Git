@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Convertidor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url('https://cdn.aicad.es/asset/img/2/automata-programable_IHF2KmE731.jpg') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .container {
+      background: rgba(20, 20, 30, 0.92);
+      padding: 40px;
+      border-radius: 15px;
+      width: 500px;
+      height: 520px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #ffffff;
+    }
+
+    .input-group {
+      margin-bottom: 25px;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #1c1c28;
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    input:focus {
+      border: 1px solid #00aaff;
+    }
+
+    .switch-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 25px 0;
+      color: #fff;
+      font-size: 14px;
+      gap: 12px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 28px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #007aff; 
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    button {
+      flex: 1;
+      margin: 0 5px;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-convertir {
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: #fff;
+    }
+
+    .btn-convertir:hover {
+      opacity: 0.9;
+    }
+
+    .btn-limpiar {
+      background: #444;
+      color: #fff;
+    }
+
+    .btn-limpiar:hover {
+      background: #666;
+    }
+
+    #salida {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #333;
+      text-align: center;
+      font-weight: bold;
+      color: #00e6ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Convertidor de Infija</h1>
+    <div class="input-group">
+      <label for="entrada">Expresión Infija</label>
+      <input type="text" id="entrada" placeholder="Ejemplo: (A+B)*C" onkeydown="return validarEspacio(event)">
+    </div>
+
+    <div class="switch-container">
+      <span>Prefija</span>
+      <label class="switch">
+        <input type="checkbox" id="modo">
+        <span class="slider"></span>
+      </label>
+      <span>Postfija</span>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-convertir" onclick="convertir()">Convertir</button>
+      <button class="btn-limpiar" onclick="limpiar()">Limpiar</button>
+    </div>
+
+    <div id="salida">Resultado aquí...</div>
+  </div>
+
+  <script>
+    function precedencia(op) {
+      if(op === '+' || op === '-') return 1;
+      if(op === '*' || op === '/') return 2;
+      if(op === '^') return 3;
+      return -1;
+    }
+
+    // INFIJA A PREFIJA
+    function infijaAPrefija(exp) {
+      let stack = [];
+      let resultado = [];
+
+      exp = exp.split("").reverse().join("");
+      exp = exp.replace(/\(/g, "#").replace(/\)/g, "(").replace(/#/g, ")");
+
+      for(let i = 0; i < exp.length; i++) {
+        let c = exp[i];
+
+        if(/[a-zA-Z0-9]/.test(c)) {
+          resultado.push(c);
+        }
+        else if(c === '(') {
+          stack.push(c);
+        }
+        else if(c === ')') {
+          while(stack.length && stack[stack.length - 1] !== '(') {
+            resultado.push(stack.pop());
+          }
+          stack.pop();
+        }
+        else {
+          while(stack.length && precedencia(c) < precedencia(stack[stack.length - 1])) {
+            resultado.push(stack.pop());
+          }
+          stack.push(c);
+        }
+      }
+
+      while(stack.length) {
+        resultado.push(stack.pop());
+      }
+
+      return resultado.reverse().join("");
+    }
+
+    // INFIJA A POSTFIJA
+    function infijaAPostfija(exp) {
+      let stack = [];
+      let resultado = [];
+
+      for(let i = 0; i < exp.length; i++) {
+        let c = exp[i];
+
+        if(/[a-zA-Z0-9]/.test(c)) {
+          resultado.push(c);
+        }
+        else if(c === '(') {
+          stack.push(c);
+        }
+        else if(c === ')') {
+          while(stack.length && stack[stack.length - 1] !== '(') {
+            resultado.push(stack.pop());
+          }
+          stack.pop();
+        }
+        else {
+          while(stack.length && precedencia(c) <= precedencia(stack[stack.length - 1])) {
+            resultado.push(stack.pop());
+          }
+          stack.push(c);
+        }
+      }
+
+      while(stack.length) {
+        resultado.push(stack.pop());
+      }
+
+      return resultado.join("");
+    }
+
+    function validarEspacio(e) {
+      if(e.key === " ") {
+        return false;
+      }
+      return true;
+    }
+
+    // CONTROLADOR
+    function convertir() {
+      let entrada = document.getElementById("entrada").value.replace(/\s+/g, ""); // quitar espacios
+      let modo = document.getElementById("modo").checked; // false = Prefija, true = Postfija
+      if(entrada === "") {
+        document.getElementById("salida").textContent = "Ingresa una expresión primero.";
+        return;
+      }
+
+      let salida = modo ? infijaAPostfija(entrada) : infijaAPrefija(entrada);
+      document.getElementById("salida").textContent = salida;
+    }
+
+    function limpiar() {
+      document.getElementById("entrada").value = "";
+      document.getElementById("salida").textContent = "Resultado aquí...";
+      document.getElementById("modo").checked = false;
+    }
+  </script>
+</body>
+</html>
+
+
